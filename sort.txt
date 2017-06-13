@@ -1,0 +1,643 @@
+#include <graphics.h>
+int a[10] = { 10,4,2,3,6,1,7,9,5,8 };
+struct AniObj
+{
+	int value;
+	int X;
+	int x, y, top;
+	int dx, dy;
+	int alpha, da;
+	PIMAGE img;
+};
+void initobj(AniObj* obj, int i)
+{
+	//obj = new AniObj;
+	obj->value = a[i];
+	obj->X = 1 + 80 * i;
+	obj->x = 1 + 80 * i;
+	obj->y = 300;
+	obj->top = 150 - obj->value * 10;
+	obj->dx = 0;
+	obj->dy = 0;
+	obj->alpha = 255;
+	obj->da = 10;
+
+	// 初始化img
+	obj->img = newimage(400, 400);
+
+	setcolor(BLUE, obj->img);
+	setfillcolor(BLUE, obj->img);
+
+	bar3d(100, obj->top, 120, 150, 10, 1, obj->img);
+}
+void drawobj(AniObj* obj)
+{
+	putimage_alphatransparent(NULL, obj->img, obj->x, obj->y, BLACK, (unsigned char)obj->alpha);
+}
+void releaseobj(AniObj* obj)
+{
+	delimage(obj->img);
+	delete obj;
+}
+
+void exchange(AniObj*A, AniObj*B)
+{
+	A->dy = 5;
+	B->dy = 5;
+	if (A->dx == 0)
+	{
+		if (A->y >= 100)
+		{
+			A->y -= A->dy;
+			B->y -= B->dy;
+		}
+		else
+		{
+			A->dy = 0;
+			B->dy = 0;
+		}
+	}
+	if (A->y == 100)
+	{
+		A->dx = 5;
+		B->dx = 5;
+		if (A->x != B->X)
+		{
+			A->x += A->dx;
+			B->x -= B->dx;
+		}
+		else
+		{
+			A->dx = 0;
+			B->dx = 0;
+		}
+
+	}
+	if (B->x == A->X)
+	{
+		A->dy = 5;
+		B->dy = 5;
+		if (A->y <= 300)
+		{
+			A->y += A->dy;
+			B->y += B->dy;
+		}
+		else
+		{
+			A->dy = 0;
+			B->dy = 0;
+		}
+	}
+	if (A->x == B->X && A->y == 300)
+	{
+		A->dx = 0;
+		A->dy = 0;
+		B->dx = 0;
+		B->dy = 0;
+
+	}
+}
+void bubble_move()
+{
+	const int MAXOBJ = 10;
+	AniObj *obj[MAXOBJ];
+	int n;
+	for (n = 0; n < MAXOBJ; ++n)
+	{
+		obj[n] = new AniObj;
+		initobj(obj[n], n);
+	}
+	int i, j;
+	for (i = 0; i < 9; i++)
+	{
+		for (j = 0; j < 9 - i; j++)
+		{
+			if (obj[j + 1]->value < obj[j]->value)
+			{
+
+				for (; obj[j + 1]->x != obj[j]->X || obj[j]->y != 300; delay_fps(60))
+				{
+
+					cleardevice();
+					for (n = 0; n < MAXOBJ; ++n)
+					{
+						drawobj(obj[n]); //绘画
+						setcolor(BLUE);
+						setfont(60, 45, "宋体");
+						outtextxy(275, 50, "冒泡排序");
+					}
+					exchange(obj[j], obj[j + 1]);
+				}
+				AniObj temp;
+				temp = *obj[j + 1];
+				*obj[j + 1] = *obj[j];
+				*obj[j] = temp;
+				int temp1;
+				temp1 = obj[j + 1]->X;
+				obj[j + 1]->X = obj[j]->X;
+				obj[j]->X = temp1;
+
+			}
+
+		}
+	}
+
+	for (n = 0; n < MAXOBJ; ++n)
+	{
+		releaseobj(obj[n]); //释放
+	}
+
+}
+
+
+void pop(AniObj* A)
+{
+	if (A->y >= 100)
+	{
+		A->dy = 5;
+		A->y -= A->dy;
+	}
+	else A->dy = 0;
+
+}
+int shift(AniObj*A, int l)
+{
+
+	A->dx = 5;
+	if (l <= 80)
+	{
+		A->x += A->dx;
+		l += A->dx;
+	}
+	else
+	{
+		A->dx = 0;
+		l = 0;
+	}
+	return l;
+}
+void push(AniObj*A, AniObj*B)
+{
+
+	if (A->x > B->X)
+	{
+		A->dx = 5;
+		A->x -= A->dx;
+	}
+	else
+	{
+		if (A->y <= 300)
+		{
+			A->dx = 0;
+			A->dy = 5;
+			A->y += A->dy;
+		}
+		else
+		{
+			A->dx = 0;
+			A->dy = 0;
+		}
+	}
+}
+void selection_move()
+{
+	const int MAXOBJ = 10;
+	AniObj *obj[MAXOBJ];
+	int n;
+	for (n = 0; n < MAXOBJ; ++n)
+	{
+		obj[n] = new AniObj;
+		initobj(obj[n], n);
+	}
+	int i, j, max, max_element;
+	for (i = 0; i < 9; i++)
+	{
+		max = 0;
+		for (j = 0; j < 9 - i; j++)
+		{
+			if (obj[j]->value > max)
+			{
+				max = obj[j]->value;
+				max_element = j;
+			}
+		}
+		if (obj[max_element]->value >= obj[j]->value)
+		{
+			for (; obj[j]->x != obj[max_element]->X || obj[j]->y != 300; delay_fps(60))
+			{
+
+				cleardevice();
+				for (n = 0; n < MAXOBJ; ++n)
+				{
+					drawobj(obj[n]); //绘画
+					setfont(60, 45, "宋体");
+					outtextxy(275, 50, "选择排序");
+				}
+				exchange(obj[max_element], obj[j]);
+			}
+			AniObj temp;
+			temp = *obj[j];
+			*obj[j] = *obj[max_element];
+			*obj[max_element] = temp;
+			int temp1;
+			temp1 = obj[j]->X;
+			obj[j]->X = obj[max_element]->X;
+			obj[max_element]->X = temp1;
+
+		}
+	}
+
+	for (n = 0; n < MAXOBJ; ++n)
+	{
+		releaseobj(obj[n]); //释放
+	}
+
+}
+void insertion_move()
+{
+	const int MAXOBJ = 10;
+	AniObj *obj[MAXOBJ];
+	int n;
+	for (n = 0; n < MAXOBJ; ++n)
+	{
+		obj[n] = new AniObj;
+		initobj(obj[n], n);
+	}
+	int i, key, key_num, j, k;
+	for (i = 0; i < 9; i++)
+	{
+		key = obj[i + 1]->value;
+		key_num = i + 1;
+		j = i;
+		for (; obj[j + 1]->y>100; delay_fps(60))
+		{
+			cleardevice();
+			for (n = 0; n < MAXOBJ; ++n)
+			{
+				drawobj(obj[n]); //绘画
+				setfont(60, 45, "宋体");
+				outtextxy(275, 50, "插入排序");
+			}
+			pop(obj[i + 1]);
+		}
+		while (j >= 0 && key < obj[j]->value)
+		{
+			int l = 0;;
+			for (; l != 80; delay_fps(60))
+			{
+				cleardevice();
+				for (n = 0; n < MAXOBJ; ++n)
+				{
+					drawobj(obj[n]); //绘画
+					setfont(60, 45, "宋体");
+					outtextxy(275, 50, "插入排序");
+				}
+				l = shift(obj[j], l);
+			}
+			j--;
+		}
+		for (; obj[key_num]->y <= 300; delay_fps(60))
+		{
+			cleardevice();
+			for (n = 0; n < MAXOBJ; ++n)
+			{
+				drawobj(obj[n]); //绘画
+				setfont(60, 45, "宋体");
+				outtextxy(275, 50, "插入排序");
+			}
+			push(obj[key_num], obj[j + 1]);
+		}
+		AniObj temp = *obj[key_num];
+		for (k = key_num; k >= j + 2; k--)
+		{
+			*obj[k] = *obj[k - 1];
+		}
+		*obj[j + 1] = temp;
+		/*AniObj temp;
+		temp = *obj[j + 1];
+		*obj[j + 1] = *obj[key_num];
+		*obj[key_num] = temp;*/
+		for (k = j + 2; k <= key_num; k++)
+		{
+			obj[k]->X += 80;
+		}
+		obj[j + 1]->X = obj[j + 2]->X - 80;
+
+	}
+}
+void cocktail_move()
+{
+	const int MAXOBJ = 10;
+	AniObj *obj[MAXOBJ];
+	int n;
+	for (n = 0; n < MAXOBJ; ++n)
+	{
+		obj[n] = new AniObj;
+		initobj(obj[n], n);
+	}
+	int j, left = 0, right = MAXOBJ - 1;
+	while (left < right)
+	{
+		for (j = left; j < right; j++)
+		{
+			if (obj[j + 1]->value < obj[j]->value)
+			{
+
+				for (; obj[j + 1]->x != obj[j]->X || obj[j]->y != 300; delay_fps(60))
+				{
+
+					cleardevice();
+					for (n = 0; n < MAXOBJ; ++n)
+					{
+						drawobj(obj[n]); //绘画
+						setfont(60, 45, "宋体");
+						outtextxy(275, 50, "鸡尾酒排序");
+					}
+					exchange(obj[j], obj[j + 1]);
+				}
+				AniObj temp;
+				temp = *obj[j + 1];
+				*obj[j + 1] = *obj[j];
+				*obj[j] = temp;
+				int temp1;
+				temp1 = obj[j + 1]->X;
+				obj[j + 1]->X = obj[j]->X;
+				obj[j]->X = temp1;
+			}
+
+		}
+		right--;
+		for (j = right; j > left; j--)
+		{
+			if (obj[j]->value < obj[j - 1]->value)
+			{
+
+				for (; obj[j]->x != obj[j - 1]->X || obj[j]->y != 300; delay_fps(60))
+				{
+
+					cleardevice();
+					for (n = 0; n < MAXOBJ; ++n)
+					{
+						drawobj(obj[n]); //绘画
+						setfont(60, 45, "宋体");
+						outtextxy(275, 50, "鸡尾酒排序");
+					}
+					exchange(obj[j - 1], obj[j]);
+				}
+				AniObj temp;
+				temp = *obj[j];
+				*obj[j] = *obj[j - 1];
+				*obj[j - 1] = temp;
+				int temp1;
+				temp1 = obj[j - 1]->X;
+				obj[j - 1]->X = obj[j]->X;
+				obj[j]->X = temp1;
+			}
+
+		}
+		left++;
+
+	}
+	for (n = 0; n < MAXOBJ; ++n)
+	{
+		releaseobj(obj[n]); //释放
+	}
+
+}
+int partition(AniObj *obj[], int p, int r)
+{
+	const int MAXOBJ = 10;
+	int n;
+	int i = p - 1;
+	int j = p;
+	int key = obj[r]->value;
+	for (j; j < r; j++)
+	{
+		if (key < obj[j]->value)
+		{
+			i++;
+			for (; obj[j]->x != obj[i]->X || obj[j]->y != 300; delay_fps(60))
+			{
+
+				cleardevice();
+				for (n = 0; n < MAXOBJ; ++n)
+				{
+					drawobj(obj[n]); //绘画
+					setfont(60, 45, "宋体");
+					outtextxy(275, 50, "快速排序");
+				}
+				exchange(obj[i], obj[j]);
+			}
+			AniObj temp;
+			temp = *obj[j];
+			*obj[j] = *obj[i];
+			*obj[i] = temp;
+			int temp1;
+			temp1 = obj[j]->X;
+			obj[j]->X = obj[i]->X;
+			obj[i]->X = temp1;
+		}
+	}
+	for (; obj[r]->x != obj[i + 1]->X || obj[r]->y != 300; delay_fps(60))
+	{
+
+		cleardevice();
+		for (n = 0; n < MAXOBJ; ++n)
+		{
+			drawobj(obj[n]); //绘画
+			setfont(60, 45, "宋体");
+			outtextxy(275, 50, "快速排序");
+		}
+		exchange(obj[i + 1], obj[r]);
+	}
+	AniObj temp;
+	temp = *obj[r];
+	*obj[r] = *obj[i + 1];
+	*obj[i + 1] = temp;
+	int temp1;
+	temp1 = obj[r]->X;
+	obj[r]->X = obj[i + 1]->X;
+	obj[i + 1]->X = temp1;
+	return i + 1;
+}
+void Qsort(AniObj *obj[], int p, int r)
+{
+	if (p < r)
+	{
+		int q = partition(obj, p, r);
+		Qsort(obj, p, q - 1);
+		Qsort(obj, q + 1, r);
+	}
+}
+void Qsort_move()
+{
+	const int MAXOBJ = 10;
+	static AniObj *obj[MAXOBJ];
+	int n;
+	for (n = 0; n < MAXOBJ; ++n)
+	{
+		obj[n] = new AniObj;
+		initobj(obj[n], n);
+	}
+	Qsort(obj, 0, 9);
+	for (n = 0; n < MAXOBJ; ++n)
+	{
+		releaseobj(obj[n]); //释放
+	}
+
+}
+
+
+
+struct aniobj1
+{
+	float x, y;
+	int r;
+	float dx, dy;
+	int alpha, da;
+	PIMAGE img;
+};
+
+//自定义函数，用来返回一个0 - m之间的浮点数
+float myrand(float m)
+{
+	// randomf() 返回一个 0 到 1 之间的随机浮点数
+	return (float)(randomf() * m);
+}
+
+//定义速度基准值，base_speed是最低速度，base_speed+randspeed是最高速度
+const float base_speed = 0.5f;
+const float randspeed = 1.5f;
+
+//初始化，设置坐标，速度方向，透明度，创建image等
+void initobj(aniobj1* obj)
+{
+	obj->x = myrand((float)getwidth());
+	obj->y = myrand((float)getheight());
+	obj->r = random(20) + 20;
+	// 随机速度
+	obj->dx = myrand(randspeed) + base_speed;
+	obj->dy = myrand(randspeed) + base_speed;
+	// 随机方向
+	obj->dx = obj->dx * float(random(2) * 2.0 - 1);
+	obj->dy = obj->dy * float(random(2) * 2.0 - 1);
+	// 以上的处理方式用来保证速度不过慢
+
+	obj->alpha = random(250) + 2;
+	obj->da = (int)random(2) * 2 - 1;
+
+	obj->img = newimage(obj->r * 2, obj->r * 2);
+
+	color_t col = hsv2rgb(myrand(360.0f), 1.0f, 1.0f);
+	setcolor(col, obj->img);
+	setfillcolor(col, obj->img);
+
+	fillellipse(obj->r, obj->r, obj->r, obj->r, obj->img);
+}
+
+//更新位置等相关属性
+void updateobj(aniobj1* obj)
+{
+	// 当前位置 + 速度
+	obj->x += obj->dx;
+	obj->y += obj->dy;
+	if (obj->x < 0) obj->dx = myrand(randspeed) + base_speed; //碰左
+	if (obj->y < 0) obj->dy = myrand(randspeed) + base_speed; //碰上
+	if (obj->x >= ege::getwidth() - obj->r * 2) obj->dx = -(myrand(randspeed) + base_speed); //碰右
+	if (obj->y >= ege::getheight() - obj->r * 2) obj->dy = -(myrand(randspeed) + base_speed); //碰下
+
+																							  // 改变alpha值
+	obj->alpha += obj->da;
+	if (obj->alpha <= 0) obj->da = 1;
+	if (obj->alpha >= 150) obj->da = -1;
+}
+
+//根据属性值绘画
+void drawobj(aniobj1* obj)
+{
+	putimage_alphatransparent(NULL, obj->img, (int)obj->x, (int)obj->y, BLACK, (unsigned char)obj->alpha);
+}
+
+//释放这个对象时调用
+void releaseobj(aniobj1* obj)
+{
+	delimage(obj->img);
+}
+
+void mainloop()
+{
+	const int maxobj = 30;
+	aniobj1 obj[maxobj]; //定义对象数组
+	int n;
+
+	for (n = 0; n < maxobj; ++n)
+	{
+		initobj(&obj[n]); //初始化
+	}
+
+	for (; is_run(); delay_fps(60))
+	{
+		for (n = 0; n < maxobj; ++n)
+		{
+			updateobj(&obj[n]); //更新位置
+		}
+
+		cleardevice();
+		for (n = 0; n < maxobj; ++n)
+		{
+			drawobj(&obj[n]); //绘画
+			setcolor(BLUE);
+			setfont(90, 60, "宋体");
+			outtextxy(275, 250, "排序动画");
+		}
+		if (kbhit()) break;
+	}
+
+	for (n = 0; n < maxobj; ++n)
+	{
+		releaseobj(&obj[n]); //释放
+	}
+}
+void ending()
+{
+	cleardevice();
+	PIMAGE ege;
+	ege = newimage();
+	getimage(ege, "D:\\ege_logo.png", 1000, 600);
+	putimage(0, 0, ege);
+	setcolor(RED);
+	setfont(60, 45, "宋体");
+	outtextxy(250, 200, "致敬EGE开发组");
+	setcolor(BLUE);
+	setfont(40, 24, "宋体");
+	outtextxy(250, 300, "    ——by 陈子颀 邹国瀚");
+	getch();
+	delimage(ege);
+}
+int main()
+{
+	setinitmode(INIT_ANIMATION);
+	// 图形初始化，窗口尺寸640x480
+	initgraph(1000, 600);
+	// 随机数初始化，如果需要使用随机数的话
+	setbkcolor(WHITE);
+	mainloop();
+	bubble_move();
+	getch();
+	mainloop();
+	selection_move();
+	getch();
+	mainloop();
+	insertion_move();
+	getch();
+	mainloop();
+	cocktail_move();
+	getch();
+	mainloop();
+	Qsort_move();
+	getch();
+	ending();
+	closegraph();
+	return 0;
+
+}
